@@ -4923,7 +4923,7 @@ const Sound = {
 /* =============================================================================
  * ESTADO DE LA APP + HUD
  * ========================================================================== */
-const APP_VERSION = '2.0.1-movil';
+const APP_VERSION = '2.0.2-movil';
 const state = { company: '', mode: '', accounts: [], counts: {}, feed: [], connected: false };
 CATS.forEach(c => { state.counts[c] = 0; });
 const $ = id => document.getElementById(id);
@@ -5554,6 +5554,16 @@ function bindStage() {
   dom.zoomBtn.onclick = () => setZoom(zoom > 1 ? 1 : 2, zoom > 1 ? null : [W * 0.5, H * 0.58]);
 }
 
+/* iOS (app instalada con barra de estado translúcida) a veces informa un alto de ventana menor que la pantalla
+ * y deja una franja vacía abajo: en ese caso se usa el alto real de la pantalla. */
+function fitAppHeight() {
+  const app = document.getElementById('app');
+  const standalone = window.navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  if (!standalone) { app.style.height = ''; return; }
+  const portrait = window.innerHeight >= window.innerWidth;
+  const full = portrait ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width);
+  app.style.height = Math.max(window.innerHeight, full) + 'px';
+}
 function setSwitch(el, on) { el.setAttribute('aria-checked', on ? 'true' : 'false'); }
 
 function init() {
@@ -5624,6 +5634,10 @@ function init() {
   const standalone = window.navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
   dom.installBox.hidden = standalone;
   dom.versionNote.textContent = `Mail Agent ${APP_VERSION}${standalone ? ' · app instalada' : ''}`;
+
+  fitAppHeight();
+  window.addEventListener('resize', fitAppHeight);
+  window.addEventListener('orientationchange', () => setTimeout(fitAppHeight, 300));
 
   // oficina
   bindStage();
